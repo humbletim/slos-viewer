@@ -30,6 +30,7 @@
 #include "llmodelpreview.h"
 
 #include "llfloatermodelpreview.h"
+#include "llcustommesh.cpp"
 
 #include "llfilepicker.h"
 #include "llimagebmp.h"
@@ -1700,7 +1701,15 @@ void LLFloaterModelPreview::onBrowseLOD(S32 lod)
 {
     assert_main_thread();
 
-    loadModel(lod);
+    if (true) // Featherweight injection point
+    {
+        prepareToLoadModel(lod);
+        LLCustomMesh::createCubeMesh(mModelPreview, lod);
+    }
+    else
+    {
+        loadModel(lod);
+    }
 }
 
 //static
