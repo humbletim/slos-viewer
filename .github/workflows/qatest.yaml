@@ -101,7 +101,7 @@ jobs:
         for dir in all-artifacts/*/; do
           dirname=$(basename "$dir")
           platform=$(echo "$dirname" | cut -d'-' -f2)
-          compiler=$(echo "$dirname" | cut -d'-' -f3)
+          compiler=$(echo "$dirname" | cut -d'-' -f4)
           native_result_file="${dir}result_native.txt"
           fixed_result_file="${dir}result_fixed.txt"
           if [ -f "$native_result_file" ] && [ -f "$fixed_result_file" ]; then
