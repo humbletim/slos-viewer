@@ -47,23 +47,24 @@ jobs:
         EXE_EXT=""
         if [ "${{ runner.os }}" == "Windows" ]; then
           EXE_EXT=".exe"
+          export MSYS_NO_PATHCONV=1
         fi
 
         mkdir -p results
 
         # Compile and run native mode
         if [ "${{ matrix.compiler }}" == "msvc" ]; then
-          $CXX /std:c++11 /Inoise_test/mocks noise_test/main.cpp /Femain_native$EXE_EXT
+          $CXX /std:c++17 /Inoise_test/mocks noise_test/main.cpp /Femain_native$EXE_EXT
         else
-          $CXX -std=c++11 -Inoise_test/mocks noise_test/main.cpp -o main_native$EXE_EXT
+          $CXX -std=c++17 -Inoise_test/mocks noise_test/main.cpp -o main_native$EXE_EXT
         fi
         ./main_native$EXE_EXT > results/actual_native.txt
 
         # Compile and run fixed mode
         if [ "${{ matrix.compiler }}" == "msvc" ]; then
-          $CXX /std:c++11 /Inoise_test/mocks /DUSE_MSVC_COMPAT noise_test/main.cpp /Femain_fixed$EXE_EXT
+          $CXX /std:c++17 /Inoise_test/mocks /DUSE_MSVC_COMPAT noise_test/main.cpp /Femain_fixed$EXE_EXT
         else
-          $CXX -std=c++11 -Inoise_test/mocks -DUSE_MSVC_COMPAT noise_test/main.cpp -o main_fixed$EXE_EXT
+          $CXX -std=c++17 -Inoise_test/mocks -DUSE_MSVC_COMPAT noise_test/main.cpp -o main_fixed$EXE_EXT
         fi
         ./main_fixed$EXE_EXT > results/actual_fixed.txt
 
