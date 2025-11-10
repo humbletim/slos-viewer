@@ -32,13 +32,14 @@ jobs:
     - name: Compile and Test
       shell: bash
       run: |
+        set -e
+
         # Set compiler based on matrix
         if [ "${{ matrix.compiler }}" == "gcc" ]; then
           CXX="g++"
         elif [ "${{ matrix.compiler }}" == "clang" ]; then
           CXX="clang++"
         elif [ "${{ matrix.compiler }}" == "msvc" ]; then
-          # This shell is bash, but cl.exe is in the PATH from setup-msvc
           CXX="cl.exe"
         fi
 
@@ -48,59 +49,29 @@ jobs:
           EXE_EXT=".exe"
         fi
 
-        # Create output directory for artifacts
         mkdir -p results
 
-        # --- NATIVE MODE ---
-        echo "--- Compiling Native Mode (${{ matrix.compiler }}) ---"
+        # Compile and run native mode
         if [ "${{ matrix.compiler }}" == "msvc" ]; then
           $CXX /std:c++11 /Inoise_test/mocks noise_test/main.cpp /Femain_native$EXE_EXT
         else
           $CXX -std=c++11 -Inoise_test/mocks noise_test/main.cpp -o main_native$EXE_EXT
         fi
-
-        echo "--- Running Native Mode ---"
         ./main_native$EXE_EXT > results/actual_native.txt
 
-        echo "--- Comparing Native Mode ---"
-        # Use fc on windows, diff otherwise. Mute output, we only care about exit code.
-        # diff returns 0 for match, 1 for mismatch. fc returns 0 for match, non-zero for mismatch.
-        if [ "${{ runner.os }}" == "Windows" ]; then
-          fc /W results/actual_native.txt noise_test/standard_cypher.txt > nul
-        else
-          diff -b results/actual_native.txt noise_test/standard_cypher.txt > /dev/null
-        fi
-
-        if [ $? -eq 0 ]; then
-          echo "✅ Match" > results/result_native.txt
-        else
-          echo "❌ Mismatch" > results/result_native.txt
-        fi
-        cat results/result_native.txt
-
-        # --- FIXED MODE ---
-        echo "--- Compiling Fixed Mode (${{ matrix.compiler }}) ---"
+        # Compile and run fixed mode
         if [ "${{ matrix.compiler }}" == "msvc" ]; then
           $CXX /std:c++11 /Inoise_test/mocks /DUSE_MSVC_COMPAT noise_test/main.cpp /Femain_fixed$EXE_EXT
         else
           $CXX -std=c++11 -Inoise_test/mocks -DUSE_MSVC_COMPAT noise_test/main.cpp -o main_fixed$EXE_EXT
         fi
-
-        echo "--- Running Fixed Mode ---"
         ./main_fixed$EXE_EXT > results/actual_fixed.txt
 
-        echo "--- Comparing Fixed Mode ---"
-        if [ "${{ runner.os }}" == "Windows" ]; then
-          fc /W results/actual_fixed.txt noise_test/standard_cypher.txt > nul
-        else
-          diff -b results/actual_fixed.txt noise_test/standard_cypher.txt > /dev/null
-        fi
+        # Compare results
+        diff -b results/actual_native.txt noise_test/standard_cypher.txt && echo "✅ Match" > results/result_native.txt || echo "❌ Mismatch" > results/result_native.txt
+        diff -b results/actual_fixed.txt noise_test/standard_cypher.txt && echo "✅ Match" > results/result_fixed.txt || echo "❌ Mismatch" > results/result_fixed.txt
 
-        if [ $? -eq 0 ]; then
-          echo "✅ Match" > results/result_fixed.txt
-        else
-          echo "❌ Mismatch" > results/result_fixed.txt
-        fi
+        cat results/result_native.txt
         cat results/result_fixed.txt
 
     - name: Upload Artifacts
@@ -126,18 +97,12 @@ jobs:
         echo "### Noise Test Harness Report" >> $GITHUB_STEP_SUMMARY
         echo "| Platform | Compiler | Native CRT Mode | MSVC Compat Mode |" >> $GITHUB_STEP_SUMMARY
         echo "| :--- | :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-
-        # Loop through each downloaded artifact directory
         for dir in all-artifacts/*/; do
-          # Extract os and compiler from directory name 'results-os-compiler'
           dirname=$(basename "$dir")
           platform=$(echo "$dirname" | cut -d'-' -f2)
           compiler=$(echo "$dirname" | cut -d'-' -f3)
-
           native_result_file="${dir}result_native.txt"
           fixed_result_file="${dir}result_fixed.txt"
-
-          # Check if result files exist to avoid errors
           if [ -f "$native_result_file" ] && [ -f "$fixed_result_file" ]; then
             native_result=$(cat "$native_result_file")
             fixed_result=$(cat "$fixed_result_file")
