@@ -10,17 +10,19 @@ int main()
     noise2(warmup_vec);
 
     // Test vectors similar to terrain generation grid
-    std::vector<std::pair<float, float>> test_points = { { 10.5f, 20.1f },
-                                                         { 100.1f, 5.5f },
-                                                         { 255.9f, 255.9f },
-                                                         { 0.0f, 0.0f },
-                                                         { 128.0f, 128.0f } };
+    std::vector<std::pair<float, float>> test_points = {
+        { 10.5f, 20.1f },
+        { 100.1f, 5.5f },
+        { 255.9f, 255.9f },
+        { 0.0f, 0.0f },
+        { 128.0f, 128.0f },
+    };
 
     std::cout << std::fixed << std::setprecision(6);
     for (const auto& p : test_points)
     {
-        F32   vec[2] = { p.first, p.second };
-        float n      = noise2(vec);
+        F32 vec[2] = { p.first, p.second };
+        float n = noise2(vec);
         std::cout << "Pos(" << p.first << ", " << p.second << ") -> " << n << std::endl;
     }
 

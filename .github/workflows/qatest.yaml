@@ -27,7 +27,7 @@ jobs:
 
     - name: Setup MSVC for Windows
       if: matrix.compiler == 'msvc'
-      uses: microsoft/setup-msvc@v1
+      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Compile and Test
       shell: bash

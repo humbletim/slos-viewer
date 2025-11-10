@@ -3,6 +3,8 @@
 #define LL_LLRAND_H
 #define LLMATH_H
 
+#include "mocks/llmath.h"
+
 // Include the MSVC LCG compatibility payload first
 #include "mocks/msvc-lcg.inl"
 
